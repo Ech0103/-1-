@@ -1,0 +1,111 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <ctime>
+
+using namespace std;
+
+struct Message {
+    string user;
+    string content;
+    time_t timestamp;
+};
+
+vector<Message> message;
+string currentUser;
+
+void saveMessages() {
+    ofstream outFile("messages.txt", ios::app);
+    for (const auto & msg : message) {
+        outFile << msg.user << "|" << msg.content << "|" << msg.timestamp << endl;
+    }
+    outFile.close();
+}
+
+void loadMessages() {
+    ifstream inFile("messages.txt");
+    string line;
+    while (getline(inFile, line)) {
+        size_t pos1 = line.find('|');
+        size_t pos2 = line.find('|', pos1 + 1);
+        Message msg;
+        msg.user = line.substr(0, pos1);
+        msg.content = line.substr(pos1 + 1, pos2 - pos1 - 1);
+        msg.timestamp = stoi(line.substr(pos2 + 1));
+        message.push_back(msg);
+    }
+    inFile.close();
+}
+
+void registerUser() {
+    cout << "Введите имя пользователя: ";
+    cin >> currentUser;
+    cout << "Регистрация успешна!" << endl;
+    
+}
+
+void loginUser() {
+    cout << "Введите имя пользователя: ";
+    cin >> currentUser;
+    cout << "Вход выполнен!" << endl;
+}
+
+void logoutUser() {
+    currentUser.clear();
+    cout << "Вы вышли из аккаунта." << endl;
+}
+
+void sendMessage() {
+    if (currentUser.empty()) {
+        cout << "Сначала выполните вход в аккаунт." << endl;
+        return;
+    }
+    Message msg;
+    msg.user = currentUser;
+    cout << "Введите сообщение: ";
+    cin.ignore(); // Чтобы игнорировать оставшиеся символы после ввода имени пользователя
+    getline(cin, msg.content);
+    msg.timestamp = time(0);
+    message.push_back(msg);
+    saveMessages();
+    cout << "Сообщение отправлено!" << endl;
+}
+
+void viewMessages() {
+    cout << "Сообщения:" << endl;
+    for (const auto& msg : message) {
+        cout << "[" << ctime(&msg.timestamp) << "] " << msg.user << ": " << msg.content << endl;
+    }
+}
+
+void viewMessageHistory() {
+    cout << "История сообщений:" << endl;
+    for (const auto& msg : message) {
+        cout << msg.user << " [" << ctime(&msg.timestamp) << "]: " << msg.content << endl;
+    }
+}
+
+int main() {
+    loadMessages();
+    int choice;
+    
+    while (true) {
+        cout << "\n1. Регистрация\n2. Вход\n3. Выход\n4. Отправить сообщение\n5. Посмотреть сообщения\n6. Посмотреть историю\n7. Выход из программы\n";
+        cout << "Выберите действие: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1: registerUser(); break;
+            case 2: loginUser(); break;
+            case 3: logoutUser(); break;
+            case 4: sendMessage(); break;
+            case 5: viewMessages(); break;
+            case 6: viewMessageHistory(); break;
+            case 7: return 0;
+            default: cout << "Неверный выбор, попробуйте снова." << endl; break;
+        }
+    }
+
+    return 0;
+}
